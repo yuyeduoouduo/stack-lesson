@@ -1025,7 +1025,7 @@
     <div class="video-panel">
       <div class="video-wrapper">
         <video id="mainVideo" controls>
-          <source src="栈微课.mp4" type="video/mp4" />
+          <source src="https://stacklesson.oss-cn-shanghai.aliyuncs.com/%E6%A0%88%E5%BE%AE%E8%AF%BE.mp4" type="video/mp4" />
           您的浏览器不支持 HTML5 视频。
         </video>
 
@@ -1205,7 +1205,7 @@
     // ============================================================
     const quizData = [
       {
-        time: 30,
+        time: 35,
         question: "栈（Stack）是一种具有什么特性的数据结构？",
         options: [
           "先进先出（FIFO）",
@@ -1217,7 +1217,7 @@
         explain: "栈遵循「后进先出」(LIFO, Last In First Out) 原则，最后压入的元素最先弹出。"
       },
       {
-        time: 75,
+        time: 80,
         question: "下列哪个操作是向栈中插入元素的正确术语？",
         options: [
           "enqueue（入队）",
@@ -1229,7 +1229,7 @@
         explain: "向栈顶添加元素叫做 push（压栈），从栈顶取出元素叫做 pop（弹栈）。"
       },
       {
-        time: 130,
+        time: 135,
         question: "用栈来检验括号是否匹配时，遇到右括号 ')' 应该执行什么操作？",
         options: [
           "直接压入栈中",
@@ -1241,7 +1241,7 @@
         explain: "遇到右括号时，从栈顶弹出一个元素，检查它是否与当前右括号匹配。若不匹配或栈为空，则括号不合法。"
       },
       {
-        time: 180,
+        time: 185,
         question: "以下关于栈的说法，哪一项是错误的？",
         options: [
           "栈只能在一端（栈顶）进行插入和删除操作",
@@ -1253,7 +1253,7 @@
         explain: "栈不支持随机访问，只能访问栈顶元素。要取得中间元素，必须依次弹出上方所有元素。"
       },
       {
-        time: 230,
+        time: 235,
         question: "递归函数的调用过程在底层是借助哪种结构来管理的？",
         options: [
           "队列（Queue）",
@@ -1265,7 +1265,7 @@
         explain: "程序执行递归时，每次函数调用的参数、局部变量和返回地址都被压入「调用栈」，函数返回时依次弹出，体现了栈的 LIFO 特性。"
       },
       {
-        time: 285,
+        time: 290,
         question: "将中缀表达式 3 + 4 × 2 转换为后缀表达式（逆波兰式）时，结果是？",
         options: [
           "3 4 2 × +",
@@ -1277,9 +1277,7 @@
         explain: "按照运算符优先级，先处理乘法：4×2 变为 4 2 ×，再与 3 相加得 3 4 2 × +。利用栈可以将任意中缀表达式转换为后缀表达式。"
       }
     ];
-    // ============================================================
-    //  以下为逻辑代码，无需修改
-    // ============================================================
+   
 
     const video       = document.getElementById('mainVideo');
     const overlay     = document.getElementById('quizOverlay');
