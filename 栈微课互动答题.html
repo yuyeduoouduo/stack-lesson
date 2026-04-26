@@ -1530,7 +1530,7 @@
 
     // ── AI 对话历史（保持上下文） ──
     const aiHistory = [
-      { role: 'system', content: '你是一个专门讲解数据结构"栈"的学习助手，名字叫"栈学助手"。只回答和栈相关的问题（包括栈的概念、push/pop操作、数组/链表实现、栈溢出、括号匹配、出栈序列、表达式求值、函数调用栈等）。如果问题与栈无关，请礼貌地说明只能解答栈相关问题。回答简洁清晰，可以使用代码块，用中文回答。' }
+      { role: 'system', content: '你是专门讲解数据结构"栈"的学习助手，名字叫"栈学助手"。无论用户用什么语言提问，你必须始终用中文回答。只回答和栈相关的问题（栈的概念、push/pop操作、数组/链表实现、栈溢出、括号匹配、出栈序列、表达式求值、函数调用栈等）。如果问题与栈无关，请礼貌地用中文说明只能解答栈相关问题。回答简洁清晰，可适当使用代码块。' }
     ];
 
     async function sendMessage() {
@@ -1546,25 +1546,30 @@
       aiHistory.push({ role: 'user', content: text });
 
       try {
-        const resp = await fetch('https://text.pollinations.ai/openai', {
+        const resp = await fetch('https://api.pollinations.ai/v1/chat/completions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             model: 'openai',
             messages: aiHistory,
-            seed: Math.floor(Math.random() * 10000)
+            seed: Math.floor(Math.random() * 10000),
+            private: true
           })
         });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
-        const reply = data.choices?.[0]?.message?.content || '抱歉，没有收到回复，请重试。';
+        const reply = data.choices?.[0]?.message?.content || '';
+        // 过滤掉弃用通知
+        if (!reply || reply.includes('IMPORTANT NOTICE') || reply.includes('deprecated')) {
+          throw new Error('invalid response');
+        }
         aiHistory.push({ role: 'assistant', content: reply });
         typingIndicator.classList.remove('show');
         addMessage('ai', reply);
       } catch (e) {
         typingIndicator.classList.remove('show');
         // fallback：离线关键词匹配
-        addMessage('ai', getAIReply(text) + '\n\n<small style="color:#aaa">（当前处于离线模式，AI服务暂时不可用）</small>');
+        addMessage('ai', getAIReply(text));
       }
     }
 
