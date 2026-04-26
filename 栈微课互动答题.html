@@ -1832,9 +1832,9 @@ bool validateStackSequences(vector<int> pushed, vector<int> popped) {
         <ul class="prob-constraints">${conHtml}</ul>
       `;
 
-      // 恢复或初始化代码
+      // 初始化代码（每次进入页面重置为模板）
       const ta = document.getElementById('codeEditor');
-      ta.value = localStorage.getItem('code_lab_' + prob.id) || prob.template;
+      ta.value = prob.template;
 
       // 重置结果区
       document.getElementById('testResultsArea').innerHTML = '';
@@ -1860,8 +1860,6 @@ bool validateStackSequences(vector<int> pushed, vector<int> popped) {
       const prob = codeProblems[currentProbIdx];
       const code = document.getElementById('codeEditor').value.trim();
       if (!code) return;
-
-      localStorage.setItem('code_lab_' + prob.id, code);
 
       const btn = document.getElementById('runBtn');
       btn.disabled = true;
