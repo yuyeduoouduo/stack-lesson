@@ -828,11 +828,12 @@
     }
     .trial-header {
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       gap: 8px;
-      padding: 5px 14px;
+      padding: 6px 14px;
       background: #1e2d18;
       border-bottom: 1px solid #2e4a28;
+      flex-wrap: wrap;
     }
     .trial-label {
       font-size: .78rem;
@@ -844,9 +845,8 @@
       font-size: .72rem;
       color: #5a7850;
       flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      line-height: 1.5;
+      word-break: break-all;
     }
     .trial-btn {
       flex-shrink: 0;
@@ -1689,7 +1689,7 @@ bool isValid(string s) {
   }
   return 0;
 }`,
-        trialHint: '每行输入一个括号字符串，例如：()  或  ([)]',
+        trialHint: '输入示例：() 或 ()[]{} 或 ([)]（支持多行，每行一个字符串）',
         explain: `【解题思路】利用栈的 LIFO 特性：\n• 遍历字符串每个字符\n• 遇到左括号 ( { [ → push 入栈\n• 遇到右括号 ) } ] → pop 栈顶，检查是否配对；若栈空或类型不符 → return false\n• 全部遍历完后，栈若为空 → 合法；否则存在未闭合的左括号 → 不合法\n\n时间复杂度 O(n)，空间复杂度 O(n)。`
       },
       {
@@ -1758,7 +1758,7 @@ bool validateStackSequences(vector<int> pushed, vector<int> popped) {
   }
   return 0;
 }`,
-        trialHint: '格式：先输入 n（元素个数），再输入 n 个 pushed 元素，再输入 n 个 popped 元素，例如：5  1 2 3 4 5  4 5 3 2 1',
+        trialHint: '输入示例：第一行写 n（元素个数），第二行写 pushed，第三行写 popped。如 n=5: 写“5”、“1 2 3 4 5”、“4 5 3 2 1”',
         explain: `【解题思路】模拟法（贪心）：\n• 用辅助栈 stack 模拟真实的入出栈过程\n• 按 pushed 顺序依次入栈\n• 每次入栈后，循环检查：若栈顶 === popped[i]（当前应弹出的元素）→ 弹出，i++\n  （贪心核心：能弹就立即弹，不存在等待更优时机的情况）\n• 全部入栈后若 stack 为空 → popped 是合法序列\n\n时间复杂度 O(n)，空间复杂度 O(n)。`
       }
     ];
