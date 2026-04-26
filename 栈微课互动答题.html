@@ -1740,9 +1740,8 @@ bool validateStackSequences(vector<int> pushed, vector<int> popped) {
           body: JSON.stringify({
             compiler: 'gcc-head',
             code: fullCode,
-            options: '',
-            stdin: '',
-            'compiler-option-raw': '-O2 -std=c++17'
+            options: 'c++17,optimize',
+            stdin: ''
           })
         });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
