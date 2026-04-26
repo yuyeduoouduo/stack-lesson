@@ -1734,28 +1734,30 @@ bool validateStackSequences(vector<int> pushed, vector<int> popped) {
 
       try {
         const fullCode = '#include <iostream>\nusing namespace std;\n' + code + '\n' + prob.mainCode;
-        const resp = await fetch('https://emkc.org/api/v2/piston/execute', {
+        const resp = await fetch('https://wandbox.org/api/compile.json', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            language: 'c++',
-            version: '*',
-            files: [{ name: 'main.cpp', content: fullCode }]
+            compiler: 'gcc-head',
+            code: fullCode,
+            options: '',
+            stdin: '',
+            'compiler-option-raw': '-O2 -std=c++17'
           })
         });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
-        const compileErr = (data.compile && data.compile.stderr) || '';
-        const stdout     = (data.run    && data.run.stdout)    || '';
-        const stderr     = (data.run    && data.run.stderr)    || '';
-        if (compileErr) {
+        const compileErr = data.compiler_error || '';
+        const stdout     = data.program_output || '';
+        const stderr     = data.program_error  || '';
+        if (compileErr && !stdout) {
           renderError('编译错误', compileErr);
         } else {
           const lines = stdout.trim() ? stdout.trim().split('\n') : [];
           renderResults(prob, lines, stderr);
         }
       } catch (e) {
-        renderError('网络 / 评测异常', e.message + '\n\n⚠️ 评测需要联网访问在线编译服务（emkc.org），请检查网络连接。');
+        renderError('网络 / 评测异常', e.message + '\n\n⚠️ 评测需要联网访问在线编译服务（wandbox.org），请检查网络连接。');
       }
 
       btn.disabled = false;
