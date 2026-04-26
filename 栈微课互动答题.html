@@ -1685,7 +1685,7 @@ bool isValid(string s) {
         trialMainCode: `int main() {
   string s;
   while(cin >> s) {
-    cout << (isValid(s) ? "true" : "false") << "\n";
+    cout << (isValid(s) ? "true" : "false") << endl;
   }
   return 0;
 }`,
@@ -1754,7 +1754,7 @@ bool validateStackSequences(vector<int> pushed, vector<int> popped) {
     vector<int> pushed(n), popped(n);
     for(int i=0;i<n;i++) cin >> pushed[i];
     for(int i=0;i<n;i++) cin >> popped[i];
-    cout << (validateStackSequences(pushed, popped) ? "true" : "false") << "\n";
+    cout << (validateStackSequences(pushed, popped) ? "true" : "false") << endl;
   }
   return 0;
 }`,
