@@ -820,6 +820,82 @@
     .code-textarea::-webkit-scrollbar { width: 4px; }
     .code-textarea::-webkit-scrollbar-thumb { background: #3a5030; }
 
+    /* 试运行区域 */
+    .trial-run-wrap {
+      flex-shrink: 0;
+      border-top: 1px solid #2e4a28;
+      background: #1a2614;
+    }
+    .trial-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 14px;
+      background: #1e2d18;
+      border-bottom: 1px solid #2e4a28;
+    }
+    .trial-label {
+      font-size: .78rem;
+      font-weight: 700;
+      color: #8ec88a;
+      flex-shrink: 0;
+    }
+    .trial-hint-text {
+      font-size: .72rem;
+      color: #5a7850;
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .trial-btn {
+      flex-shrink: 0;
+      padding: 4px 14px;
+      background: #2e4a28;
+      border: 1px solid #4a7040;
+      border-radius: 6px;
+      color: #a0d898;
+      font-size: .78rem;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .15s;
+    }
+    .trial-btn:hover:not(:disabled) { background: #3a5c32; }
+    .trial-btn:disabled { opacity: .45; cursor: default; }
+    .trial-stdin {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 7px 14px;
+      background: #1a2614;
+      color: #b0d8a8;
+      border: none;
+      outline: none;
+      resize: vertical;
+      min-height: 48px;
+      max-height: 90px;
+      font-family: 'Consolas','Courier New',monospace;
+      font-size: .82rem;
+      line-height: 1.6;
+    }
+    .trial-stdin::placeholder { color: #3e5838; }
+    .trial-output {
+      padding: 6px 14px;
+      font-family: 'Consolas','Courier New',monospace;
+      font-size: .82rem;
+      color: #c8e4b8;
+      background: #141e10;
+      min-height: 0;
+      max-height: 90px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      display: none;
+    }
+    .trial-output.show { display: block; }
+    .trial-output.err  { color: #e07878; }
+
     /* 测试结果区 */
     .test-results-wrap {
       max-height: 240px;
@@ -1091,6 +1167,16 @@
             <button class="run-btn" id="runBtn" onclick="runCode()">▶ 提交代码</button>
           </div>
           <textarea class="code-textarea" id="codeEditor" spellcheck="false"></textarea>
+          <!-- 试运行区域 -->
+          <div class="trial-run-wrap">
+            <div class="trial-header">
+              <span class="trial-label">🧪 试运行</span>
+              <span class="trial-hint-text" id="trialHintText"></span>
+              <button class="trial-btn" id="trialBtn" onclick="trialRun()">▶ 运行</button>
+            </div>
+            <textarea class="trial-stdin" id="trialStdin" placeholder="在此输入测试数据..." spellcheck="false"></textarea>
+            <div class="trial-output" id="trialOutput"></div>
+          </div>
           <div class="test-results-wrap">
             <div class="test-results-header" id="testResultsHeader">
               📊 测评结果
@@ -1596,6 +1682,14 @@ bool isValid(string s) {
     cout << (isValid("{[]}") ? "true" : "false") << endl;
     return 0;
 }`,
+        trialMainCode: `int main() {
+  string s;
+  while(cin >> s) {
+    cout << (isValid(s) ? "true" : "false") << "\n";
+  }
+  return 0;
+}`,
+        trialHint: '每行输入一个括号字符串，例如：()  或  ([)]',
         explain: `【解题思路】利用栈的 LIFO 特性：\n• 遍历字符串每个字符\n• 遇到左括号 ( { [ → push 入栈\n• 遇到右括号 ) } ] → pop 栈顶，检查是否配对；若栈空或类型不符 → return false\n• 全部遍历完后，栈若为空 → 合法；否则存在未闭合的左括号 → 不合法\n\n时间复杂度 O(n)，空间复杂度 O(n)。`
       },
       {
@@ -1654,6 +1748,17 @@ bool validateStackSequences(vector<int> pushed, vector<int> popped) {
     cout << (validateStackSequences({1,2,3},{1,3,2}) ? "true" : "false") << endl;
     return 0;
 }`,
+        trialMainCode: `int main() {
+  int n;
+  while(cin >> n) {
+    vector<int> pushed(n), popped(n);
+    for(int i=0;i<n;i++) cin >> pushed[i];
+    for(int i=0;i<n;i++) cin >> popped[i];
+    cout << (validateStackSequences(pushed, popped) ? "true" : "false") << "\n";
+  }
+  return 0;
+}`,
+        trialHint: '格式：先输入 n（元素个数），再输入 n 个 pushed 元素，再输入 n 个 popped 元素，例如：5  1 2 3 4 5  4 5 3 2 1',
         explain: `【解题思路】模拟法（贪心）：\n• 用辅助栈 stack 模拟真实的入出栈过程\n• 按 pushed 顺序依次入栈\n• 每次入栈后，循环检查：若栈顶 === popped[i]（当前应弹出的元素）→ 弹出，i++\n  （贪心核心：能弹就立即弹，不存在等待更优时机的情况）\n• 全部入栈后若 stack 为空 → popped 是合法序列\n\n时间复杂度 O(n)，空间复杂度 O(n)。`
       }
     ];
@@ -1713,6 +1818,15 @@ bool validateStackSequences(vector<int> pushed, vector<int> popped) {
       sp.innerHTML = '';
       const solBtn = document.getElementById('solBtn');
       if (solBtn) solBtn.textContent = '💡 查看参考答案与解析';
+
+      // 重置试运行区
+      const trialOut = document.getElementById('trialOutput');
+      trialOut.className = 'trial-output';
+      trialOut.textContent = '';
+      document.getElementById('trialStdin').value = '';
+      document.getElementById('trialHintText').textContent = prob.trialHint || '';
+      const trialBtn = document.getElementById('trialBtn');
+      if (trialBtn) { trialBtn.disabled = false; trialBtn.textContent = '▶ 运行'; }
     }
 
     async function runCode() {
@@ -1763,6 +1877,56 @@ bool validateStackSequences(vector<int> pushed, vector<int> popped) {
       btn.textContent = '▶ 提交代码';
     }
 
+    async function trialRun() {
+      const prob = codeProblems[currentProbIdx];
+      const code = document.getElementById('codeEditor').value.trim();
+      const stdin = document.getElementById('trialStdin').value;
+      if (!code) return;
+
+      const btn = document.getElementById('trialBtn');
+      btn.disabled = true;
+      btn.textContent = '⏳ 运行中…';
+
+      const outEl = document.getElementById('trialOutput');
+      outEl.className = 'trial-output show';
+      outEl.textContent = '运行中…';
+
+      try {
+        const fullCode = '#include <iostream>\nusing namespace std;\n' + code + '\n' + prob.trialMainCode;
+        const resp = await fetch('https://wandbox.org/api/compile.json', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            compiler: 'gcc-head',
+            code: fullCode,
+            options: 'c++17,optimize',
+            stdin: stdin
+          })
+        });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        const compileErr = data.compiler_error || '';
+        const stdout = data.program_output || '';
+        const stderr = data.program_error || '';
+        if (compileErr && !stdout) {
+          outEl.className = 'trial-output show err';
+          outEl.textContent = '编译错误：\n' + compileErr;
+        } else if (stdout || stderr) {
+          outEl.className = 'trial-output show' + (stderr && !stdout ? ' err' : '');
+          outEl.textContent = stdout || stderr;
+        } else {
+          outEl.className = 'trial-output show';
+          outEl.textContent = '（无输出）';
+        }
+      } catch (e) {
+        outEl.className = 'trial-output show err';
+        outEl.textContent = '网络错误：' + e.message;
+      }
+
+      btn.disabled = false;
+      btn.textContent = '▶ 运行';
+    }
+
     function renderResults(prob, lines, stderr) {
       const results = prob.tests.map((tc, i) => {
         const line = (lines[i] || '').trim();
@@ -1784,7 +1948,7 @@ bool validateStackSequences(vector<int> pushed, vector<int> popped) {
 
       const area = document.getElementById('testResultsArea');
       area.innerHTML = results.map((r, i) => {
-        let detail = `<span class="tc-label">测试点 ${i+1}：</span><code>${escHtml(r.desc)}</code>`;
+        let detail = `<span class="tc-label">测试点 ${i+1}</span>`;
         if (!r.pass) {
           if (r.error) {
             detail += `<br>🚨 运行时错误：<pre style="margin:4px 0 0;font-size:.76rem;color:#b83232;white-space:pre-wrap;word-break:break-all;">${escHtml(r.error.slice(0,300))}</pre>`;
