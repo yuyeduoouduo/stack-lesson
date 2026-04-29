@@ -82,6 +82,33 @@
       box-shadow: 0 1px 3px rgba(0,0,0,.12);
     }
 
+    /* 清晰度按钮组 */
+    .quality-group {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      background: #e2ecdc;
+      border-radius: 8px;
+      padding: 3px;
+    }
+    .quality-btn {
+      padding: 3px 9px;
+      border: none;
+      border-radius: 6px;
+      font-size: .73rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: transparent;
+      color: #6a8860;
+      font-family: inherit;
+      transition: background .15s, color .15s;
+    }
+    .quality-btn.active {
+      background: #f4f8f0;
+      color: #2e4a28;
+      box-shadow: 0 1px 3px rgba(0,0,0,.12);
+    }
+
     /* ── 双栏布局 ── */
     .layout {
       display: grid;
@@ -1014,6 +1041,10 @@
         <button class="speed-btn" onclick="setSpeed(1.5)">1.5×</button>
         <button class="speed-btn" onclick="setSpeed(2)">2×</button>
       </div>
+      <div class="quality-group" id="qualityGroup">
+        <button class="quality-btn" onclick="setQuality('480p')">流畅</button>
+        <button class="quality-btn active" onclick="setQuality('720p')">高清</button>
+      </div>
       <button class="open-lab-btn" onclick="openLab()">💻 编程练习</button>
     </div>
   </div>
@@ -1024,8 +1055,8 @@
     <!-- 左侧：视频 -->
     <div class="video-panel">
       <div class="video-wrapper">
-        <video id="mainVideo" controls>
-          <source src="https://stacklesson.oss-cn-shanghai.aliyuncs.com/%E6%A0%88%E5%BE%AE%E8%AF%BE.mp4" type="video/mp4" />
+        <video id="mainVideo" controls preload="metadata">
+          <source src="https://stacklesson.oss-cn-shanghai.aliyuncs.com/stack-lesson-720p.mp4" type="video/mp4" />
           您的浏览器不支持 HTML5 视频。
         </video>
 
@@ -1277,7 +1308,7 @@
         explain: "按照运算符优先级，先处理乘法：4×2 变为 4 2 ×，再与 3 相加得 3 4 2 × +。利用栈可以将任意中缀表达式转换为后缀表达式。"
       }
     ];
-   
+
 
     const video       = document.getElementById('mainVideo');
     const overlay     = document.getElementById('quizOverlay');
@@ -1287,6 +1318,12 @@
     const resultBar   = document.getElementById('resultBar');
     const resultTitle = document.getElementById('resultTitle');
     const resultExplain = document.getElementById('resultExplain');
+    const VIDEO_SOURCES = {
+      '720p': 'https://stacklesson.oss-cn-shanghai.aliyuncs.com/stack-lesson-720p.mp4',
+      '480p': 'https://stacklesson.oss-cn-shanghai.aliyuncs.com/stack-lesson-480p.mp4'
+    };
+    let currentQuality = '720p';
+
     const continueBtn = document.getElementById('continueBtn');
     const progressBar = document.getElementById('progressBar');
 
@@ -1397,6 +1434,34 @@
       } else {
         video.play();
       }
+    }
+
+    // ── 清晰度切换（保留播放进度与播放状态） ──
+    function setQuality(quality) {
+      if (!VIDEO_SOURCES[quality] || quality === currentQuality) return;
+
+      const wasPlaying = !video.paused;
+      const currentTime = video.currentTime || 0;
+      const currentRate = video.playbackRate || 1;
+
+      currentQuality = quality;
+      document.querySelectorAll('.quality-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.includes(quality === '720p' ? '高清' : '流畅'));
+      });
+
+      video.src = VIDEO_SOURCES[quality];
+      video.load();
+
+      video.addEventListener('loadedmetadata', function onLoaded() {
+        video.removeEventListener('loadedmetadata', onLoaded);
+        try {
+          video.currentTime = Math.min(currentTime, Math.max(0, (video.duration || currentTime) - 0.5));
+        } catch (e) {}
+        video.playbackRate = currentRate;
+        if (wasPlaying) {
+          video.play().catch(() => {});
+        }
+      });
     }
 
     // ── 倍速控制 ──
