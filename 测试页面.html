@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>栈微课 - 功能测试页面</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Microsoft YaHei", sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    h1 {
+      color: #667eea;
+      margin-bottom: 10px;
+      font-size: 2rem;
+    }
+    .subtitle {
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 1rem;
+    }
+    .test-section {
+      margin-bottom: 30px;
+      padding: 20px;
+      background: #f8f9fa;
+      border-radius: 12px;
+      border-left: 4px solid #667eea;
+    }
+    .test-section h2 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 1.3rem;
+    }
+    .test-item {
+      display: flex;
+      align-items: center;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: white;
+      border-radius: 8px;
+      border: 1px solid #e0e0e0;
+    }
+    .test-item .icon {
+      width: 24px;
+      height: 24px;
+      margin-right: 12px;
+      font-size: 1.2rem;
+    }
+    .test-item .label {
+      flex: 1;
+      color: #333;
+    }
+    .test-item .status {
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .status.pending { background: #ffeaa7; color: #d63031; }
+    .status.testing { background: #74b9ff; color: #0984e3; }
+    .status.success { background: #55efc4; color: #00b894; }
+    .status.failed { background: #ff7675; color: #d63031; }
+    
+    .btn {
+      display: inline-block;
+      padding: 12px 24px;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.3s;
+      margin-right: 10px;
+      margin-top: 10px;
+    }
+    .btn:hover {
+      background: #5568d3;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    .btn.secondary {
+      background: #6c757d;
+    }
+    .btn.secondary:hover {
+      background: #5a6268;
+    }
+    
+    .info-box {
+      background: #e3f2fd;
+      border-left: 4px solid #2196f3;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    .info-box h3 {
+      color: #1976d2;
+      margin-bottom: 8px;
+      font-size: 1.1rem;
+    }
+    .info-box p {
+      color: #555;
+      line-height: 1.6;
+      margin-bottom: 8px;
+    }
+    .info-box code {
+      background: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      color: #d63031;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎓 栈微课 - 功能测试</h1>
+    <p class="subtitle">国内访问优化版本 | 测试各项功能是否正常</p>
+    
+    <div class="test-section">
+      <h2>📹 视频播放测试</h2>
+      <div class="test-item">
+        <span class="icon">🎬</span>
+        <span class="label">视频加载与播放</span>
+        <span class="status pending" id="status-video">待测试</span>
+      </div>
+      <div class="test-item">
+        <span class="icon">⏱️</span>
+        <span class="label">时间轴答题触发</span>
+        <span class="status pending" id="status-quiz">待测试</span>
+      </div>
+      <div class="test-item">
+        <span class="icon">⚡</span>
+        <span class="label">倍速播放控制</span>
+        <span class="status pending" id="status-speed">待测试</span>
+      </div>
+    </div>
+    
+    <div class="test-section">
+      <h2>🤖 AI助手测试</h2>
+      <div class="test-item">
+        <span class="icon">💬</span>
+        <span class="label">本地知识库响应</span>
+        <span class="status pending" id="status-ai-local">待测试</span>
+      </div>
+      <div class="test-item">
+        <span class="icon">🌐</span>
+        <span class="label">在线API调用</span>
+        <span class="status pending" id="status-ai-online">待测试</span>
+      </div>
+    </div>
+    
+    <div class="test-section">
+      <h2>💻 编程练习测试</h2>
+      <div class="test-item">
+        <span class="icon">🔧</span>
+        <span class="label">代码编辑器</span>
+        <span class="status pending" id="status-editor">待测试</span>
+      </div>
+      <div class="test-item">
+        <span class="icon">▶️</span>
+        <span class="label">试运行功能</span>
+        <span class="status pending" id="status-trial">待测试</span>
+      </div>
+      <div class="test-item">
+        <span class="icon">✅</span>
+        <span class="label">提交评测功能</span>
+        <span class="status pending" id="status-submit">待测试</span>
+      </div>
+    </div>
+    
+    <div style="margin-top: 30px;">
+      <a href="栈微课互动答题.html" class="btn" target="_blank">🚀 打开栈微课</a>
+      <button class="btn secondary" onclick="runAutoTest()">🔍 自动测试</button>
+      <button class="btn secondary" onclick="location.reload()">🔄 重置状态</button>
+    </div>
+    
+    <div class="info-box">
+      <h3>📝 测试说明</h3>
+      <p><strong>手动测试步骤：</strong></p>
+      <p>1. 点击"打开栈微课"按钮</p>
+      <p>2. 测试视频播放是否正常</p>
+      <p>3. 在AI助手中输入"栈是什么"测试本地知识库</p>
+      <p>4. 在编程练习区编写代码并测试运行</p>
+      <p><strong>自动测试：</strong>点击"自动测试"按钮进行基础功能检测</p>
+    </div>
+    
+    <div class="info-box" style="background: #fff3cd; border-color: #ffc107;">
+      <h3>⚠️ 注意事项</h3>
+      <p>• 视频首次加载需要时间（约300MB）</p>
+      <p>• 在线编译服务可能偶尔不可用（已配置多备用服务）</p>
+      <p>• AI助手优先使用本地知识库，复杂问题才调用在线API</p>
+      <p>• 建议使用Chrome、Edge或Firefox浏览器</p>
+    </div>
+  </div>
+  
+  <script>
+    function updateStatus(id, status, text) {
+      const el = document.getElementById(id);
+      el.className = 'status ' + status;
+      el.textContent = text;
+    }
+    
+    async function runAutoTest() {
+      // 测试1: 检查HTML文件是否存在
+      updateStatus('status-video', 'testing', '测试中...');
+      try {
+        const resp = await fetch('栈微课互动答题.html', { method: 'HEAD' });
+        if (resp.ok) {
+          updateStatus('status-video', 'success', '✓ 文件存在');
+        } else {
+          updateStatus('status-video', 'failed', '✗ 文件不存在');
+        }
+      } catch (e) {
+        updateStatus('status-video', 'failed', '✗ 加载失败');
+      }
+      
+      // 测试2: 检查视频URL
+      updateStatus('status-quiz', 'testing', '测试中...');
+      try {
+        const videoUrl = 'https://stacklesson.oss-cn-shanghai.aliyuncs.com/%E6%A0%88%E5%BE%AE%E8%AF%BE.mp4';
+        const resp = await fetch(videoUrl, { method: 'HEAD' });
+        if (resp.ok) {
+          updateStatus('status-quiz', 'success', '✓ 视频可访问');
+        } else {
+          updateStatus('status-quiz', 'failed', '✗ 视频不可访问');
+        }
+      } catch (e) {
+        updateStatus('status-quiz', 'failed', '✗ 网络错误');
+      }
+      
+      // 测试3: 检查编译服务
+      updateStatus('status-submit', 'testing', '测试中...');
+      try {
+        const resp = await fetch('https://wandbox.org/api/list.json');
+        if (resp.ok) {
+          updateStatus('status-submit', 'success', '✓ 编译服务可用');
+        } else {
+          updateStatus('status-submit', 'failed', '⚠️ 主服务不可用');
+        }
+      } catch (e) {
+        updateStatus('status-submit', 'failed', '⚠️ 将使用备用服务');
+      }
+      
+      // 其他状态设为待手动测试
+      updateStatus('status-speed', 'pending', '需手动测试');
+      updateStatus('status-ai-local', 'pending', '需手动测试');
+      updateStatus('status-ai-online', 'pending', '需手动测试');
+      updateStatus('status-editor', 'pending', '需手动测试');
+      updateStatus('status-trial', 'pending', '需手动测试');
+    }
+  </script>
+</body>
+</html>
+

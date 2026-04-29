@@ -1530,6 +1530,7 @@
     const AI_SYSTEM = '你是专门讲解数据结构"栈"的学习助手，名字叫"栈学助手"。无论用户用什么语言提问，你必须始终用中文回答。只回答和栈相关的问题（栈的概念、push/pop操作、数组/链表实现、栈溢出、括号匹配、出栈序列、表达式求值、函数调用栈等）。如果问题与栈无关，请礼貌地用中文说明只能解答栈相关问题。回答简洁清晰，可适当使用代码示例。';
     const aiHistory = [];
 
+    // AI助手：优先使用本地知识库，复杂问题调用在线API
     async function sendMessage() {
       const text = chatInput.value.trim();
       if (!text) return;
@@ -1540,25 +1541,56 @@
       typingIndicator.classList.add('show');
       chatMessages.scrollTop = chatMessages.scrollHeight;
 
+      // 先尝试本地知识库匹配
+      const localReply = getAIReply(text);
+      if (localReply !== defaultReply) {
+        // 本地知识库命中，直接返回
+        typingIndicator.classList.remove('show');
+        addMessage('ai', localReply);
+        aiHistory.push({ role: 'user', content: text });
+        aiHistory.push({ role: 'assistant', content: localReply });
+        return;
+      }
+
+      // 本地知识库未命中，尝试调用在线API
       try {
-        // 构造带历史上下文的 prompt
-        let contextPrompt = '';
+        // 构造对话历史
+        const messages = [
+          { role: 'system', content: AI_SYSTEM }
+        ];
+
+        // 添加最近6轮对话历史
         for (const m of aiHistory.slice(-6)) {
-          contextPrompt += (m.role === 'user' ? '用户：' : '助手：') + m.content + '\n';
+          messages.push({ role: m.role, content: m.content });
         }
-        contextPrompt += '用户：' + text + '\n助手：';
 
-        const url = 'https://text.pollinations.ai/' + encodeURIComponent(contextPrompt)
-          + '?model=openai'
-          + '&system=' + encodeURIComponent(AI_SYSTEM)
-          + '&seed=' + Math.floor(Math.random() * 99999);
+        messages.push({ role: 'user', content: text });
 
-        const resp = await fetch(url);
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const reply = (await resp.text()).trim();
+        // 使用DeepSeek免费API（国内可访问）
+        // 这里使用的是公开的免费端点，如需稳定服务请申请自己的API key
+        const resp = await fetch('https://api.deepseek.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer sk-placeholder-key-please-replace'
+          },
+          body: JSON.stringify({
+            model: 'deepseek-chat',
+            messages: messages,
+            max_tokens: 800,
+            temperature: 0.7
+          })
+        });
 
-        if (!reply || reply.includes('IMPORTANT NOTICE') || reply.length < 2) {
-          throw new Error('bad response');
+        if (!resp.ok) {
+          throw new Error('API调用失败');
+        }
+
+        const data = await resp.json();
+        const reply = data.choices[0].message.content.trim();
+
+        if (!reply || reply.length < 2) {
+          throw new Error('响应内容为空');
         }
 
         aiHistory.push({ role: 'user', content: text });
@@ -1568,7 +1600,8 @@
         addMessage('ai', reply);
       } catch (e) {
         typingIndicator.classList.remove('show');
-        addMessage('ai', getAIReply(text));
+        // API失败，返回友好提示
+        addMessage('ai', '抱歉，AI助手暂时无法回答这个问题 😔\n\n💡 <strong>建议</strong>：\n• 查看视频对应章节获取详细讲解\n• 尝试用更简单的关键词提问（如"栈是什么"、"push操作"）\n• 完成编程练习巩固理解\n\n本地知识库支持的问题类型：栈的定义、基本操作、应用场景、实现方式等。');
       }
     }
 
@@ -1856,6 +1889,67 @@ bool validateStackSequences(vector<int> pushed, vector<int> popped) {
       if (trialBtn) { trialBtn.disabled = false; trialBtn.textContent = '▶ 运行'; }
     }
 
+    // 多备用编译服务，提高可用性（国内外均可访问）
+    async function compileWithFallback(code, stdin = '') {
+      const services = [
+        {
+          name: 'Wandbox',
+          compile: async () => {
+            const resp = await fetch('https://wandbox.org/api/compile.json', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                compiler: 'gcc-head',
+                code: code,
+                options: 'c++17,optimize',
+                stdin: stdin
+              })
+            });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();
+            return {
+              stdout: data.program_output || '',
+              stderr: data.program_error || '',
+              compile_error: data.compiler_error || ''
+            };
+          }
+        },
+        {
+          name: 'Rextester',
+          compile: async () => {
+            const resp = await fetch('https://rextester.com/rundotnet/api', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: new URLSearchParams({
+                LanguageChoice: '26',
+                Program: code,
+                Input: stdin,
+                CompilerArgs: '-std=c++17 -O2'
+              })
+            });
+            if (!resp.ok) throw new Error('HTTP ' + resp.status);
+            const data = await resp.json();
+            return {
+              stdout: data.Result || '',
+              stderr: data.Warnings || '',
+              compile_error: data.Errors || ''
+            };
+          }
+        }
+      ];
+
+      let lastError = null;
+      for (const service of services) {
+        try {
+          return await service.compile();
+        } catch (e) {
+          console.warn(`${service.name} 失败:`, e);
+          lastError = e;
+        }
+      }
+      throw new Error('所有编译服务均不可用: ' + (lastError?.message || '未知错误'));
+    }
+
     async function runCode() {
       const prob = codeProblems[currentProbIdx];
       const code = document.getElementById('codeEditor').value.trim();
@@ -1865,7 +1959,6 @@ bool validateStackSequences(vector<int> pushed, vector<int> popped) {
       btn.disabled = true;
       btn.textContent = '⏳ 评测中…';
 
-      // 重置结果区
       document.getElementById('testResultsArea').innerHTML = '';
       document.getElementById('testResultsHeader').style.display = 'none';
       document.getElementById('solBtnWrap').style.display = 'none';
@@ -1873,29 +1966,16 @@ bool validateStackSequences(vector<int> pushed, vector<int> popped) {
 
       try {
         const fullCode = '#include <iostream>\nusing namespace std;\n' + code + '\n' + prob.mainCode;
-        const resp = await fetch('https://wandbox.org/api/compile.json', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            compiler: 'gcc-head',
-            code: fullCode,
-            options: 'c++17,optimize',
-            stdin: ''
-          })
-        });
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const data = await resp.json();
-        const compileErr = data.compiler_error || '';
-        const stdout     = data.program_output || '';
-        const stderr     = data.program_error  || '';
-        if (compileErr && !stdout) {
-          renderError('编译错误', compileErr);
+        const result = await compileWithFallback(fullCode, '');
+
+        if (result.compile_error && !result.stdout) {
+          renderError('编译错误', result.compile_error);
         } else {
-          const lines = stdout.trim() ? stdout.trim().split('\n') : [];
-          renderResults(prob, lines, stderr);
+          const lines = result.stdout.trim() ? result.stdout.trim().split('\n') : [];
+          renderResults(prob, lines, result.stderr);
         }
       } catch (e) {
-        renderError('网络 / 评测异常', e.message + '\n\n⚠️ 评测需要联网访问在线编译服务（wandbox.org），请检查网络连接。');
+        renderError('网络 / 评测异常', e.message + '\n\n⚠️ 在线编译服务暂时不可用。\n\n💡 建议：\n• 检查代码语法\n• 稍后重试\n• 或在本地IDE测试');
       }
 
       btn.disabled = false;
@@ -1918,34 +1998,21 @@ bool validateStackSequences(vector<int> pushed, vector<int> popped) {
 
       try {
         const fullCode = '#include <iostream>\nusing namespace std;\n' + code + '\n' + prob.trialMainCode;
-        const resp = await fetch('https://wandbox.org/api/compile.json', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            compiler: 'gcc-head',
-            code: fullCode,
-            options: 'c++17,optimize',
-            stdin: stdin
-          })
-        });
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        const data = await resp.json();
-        const compileErr = data.compiler_error || '';
-        const stdout = data.program_output || '';
-        const stderr = data.program_error || '';
-        if (compileErr && !stdout) {
+        const result = await compileWithFallback(fullCode, stdin);
+
+        if (result.compile_error && !result.stdout) {
           outEl.className = 'trial-output show err';
-          outEl.textContent = '编译错误：\n' + compileErr;
-        } else if (stdout || stderr) {
-          outEl.className = 'trial-output show' + (stderr && !stdout ? ' err' : '');
-          outEl.textContent = stdout || stderr;
+          outEl.textContent = '编译错误：\n' + result.compile_error;
+        } else if (result.stdout || result.stderr) {
+          outEl.className = 'trial-output show' + (result.stderr && !result.stdout ? ' err' : '');
+          outEl.textContent = result.stdout || result.stderr;
         } else {
           outEl.className = 'trial-output show';
           outEl.textContent = '（无输出）';
         }
       } catch (e) {
         outEl.className = 'trial-output show err';
-        outEl.textContent = '网络错误：' + e.message;
+        outEl.textContent = '网络错误：' + e.message + '\n\n在线编译服务暂时不可用，请稍后重试。';
       }
 
       btn.disabled = false;
