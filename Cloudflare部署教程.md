@@ -69,6 +69,21 @@ https://stack-lesson.pages.dev
 
 **这个地址国内可以直接访问！**
 
+### 第八步：配置 AI 助手密钥（如需在线问答）
+
+这个项目的 AI 助手已改为通过 Cloudflare Pages Functions 代理调用 DeepSeek，
+所以 **不要把 API Key 写进 HTML**，而是配置到 Cloudflare 后台：
+
+1. 打开你的 Pages 项目
+2. 进入 **Settings**
+3. 点击 **Variables and Secrets**
+4. 选择 **Add variable** 或 **Add secret**
+5. 名称填写：`DEEPSEEK_API_KEY`
+6. 值填写：你的 DeepSeek API Key
+7. 保存后重新部署一次
+
+配置完成后，网页里的 **AI 学习助手** 就可以实时调用 DeepSeek。
+
 ---
 
 ## 🎉 完成！

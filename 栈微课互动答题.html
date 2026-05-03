@@ -1595,6 +1595,35 @@
     const AI_SYSTEM = '你是专门讲解数据结构"栈"的学习助手，名字叫"栈学助手"。无论用户用什么语言提问，你必须始终用中文回答。只回答和栈相关的问题（栈的概念、push/pop操作、数组/链表实现、栈溢出、括号匹配、出栈序列、表达式求值、函数调用栈等）。如果问题与栈无关，请礼貌地用中文说明只能解答栈相关问题。回答简洁清晰，可适当使用代码示例。';
     const aiHistory = [];
 
+    async function requestOnlineAI(messages) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000);
+
+      try {
+        const resp = await fetch('/api/chat', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ messages }),
+          signal: controller.signal
+        });
+
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok) {
+          throw new Error(data.error || 'AI服务暂时不可用');
+        }
+
+        const reply = data.reply && data.reply.trim();
+        if (!reply) {
+          throw new Error('AI返回内容为空');
+        }
+        return reply;
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
     // AI助手：优先使用本地知识库，复杂问题调用在线API
     async function sendMessage() {
       const text = chatInput.value.trim();
@@ -1619,44 +1648,16 @@
 
       // 本地知识库未命中，尝试调用在线API
       try {
-        // 构造对话历史
         const messages = [
           { role: 'system', content: AI_SYSTEM }
         ];
 
-        // 添加最近6轮对话历史
         for (const m of aiHistory.slice(-6)) {
           messages.push({ role: m.role, content: m.content });
         }
 
         messages.push({ role: 'user', content: text });
-
-        // 使用DeepSeek免费API（国内可访问）
-        // 这里使用的是公开的免费端点，如需稳定服务请申请自己的API key
-        const resp = await fetch('https://api.deepseek.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer sk-placeholder-key-please-replace'
-          },
-          body: JSON.stringify({
-            model: 'deepseek-chat',
-            messages: messages,
-            max_tokens: 800,
-            temperature: 0.7
-          })
-        });
-
-        if (!resp.ok) {
-          throw new Error('API调用失败');
-        }
-
-        const data = await resp.json();
-        const reply = data.choices[0].message.content.trim();
-
-        if (!reply || reply.length < 2) {
-          throw new Error('响应内容为空');
-        }
+        const reply = await requestOnlineAI(messages);
 
         aiHistory.push({ role: 'user', content: text });
         aiHistory.push({ role: 'assistant', content: reply });
@@ -1665,8 +1666,10 @@
         addMessage('ai', reply);
       } catch (e) {
         typingIndicator.classList.remove('show');
-        // API失败，返回友好提示
-        addMessage('ai', '抱歉，AI助手暂时无法回答这个问题 😔\n\n💡 <strong>建议</strong>：\n• 查看视频对应章节获取详细讲解\n• 尝试用更简单的关键词提问（如"栈是什么"、"push操作"）\n• 完成编程练习巩固理解\n\n本地知识库支持的问题类型：栈的定义、基本操作、应用场景、实现方式等。');
+        const hint = location.protocol === 'file:'
+          ? '当前是本地 file:// 打开页面，在线 AI 代理无法工作。请改用 Cloudflare Pages 线上地址，或启动本地服务器后再联调。'
+          : (e.name === 'AbortError' ? 'AI 请求超时，请稍后重试。' : `在线 AI 暂时不可用：${e.message}`);
+        addMessage('ai', `抱歉，AI助手暂时无法回答这个问题 😔\n\n💡 <strong>建议</strong>：\n• ${hint}\n• 查看视频对应章节获取详细讲解\n• 尝试用更简单的关键词提问（如"栈是什么"、"push操作"）\n• 完成编程练习巩固理解\n\n本地知识库支持的问题类型：栈的定义、基本操作、应用场景、实现方式等。`);
       }
     }
 
